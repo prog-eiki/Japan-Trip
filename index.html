@@ -377,7 +377,26 @@
         @media (max-width: 768px) {
             #sidebar { display: none; }
             #bottom-nav { display: flex; }
-            #main-content { padding-bottom: var(--bottom-nav-height); }
+            #main-content { padding-bottom: 0; }
+            .view { padding-bottom: calc(var(--bottom-nav-height) + 30px); }
+            
+            .mobile-sync-btn {
+                display: flex;
+                position: fixed;
+                top: 15px;
+                right: 15px;
+                z-index: 1000;
+                background: var(--surface-color);
+                padding: 6px 12px;
+                border-radius: 20px;
+                box-shadow: var(--shadow-md);
+                font-size: 11px;
+                align-items: center;
+                gap: 5px;
+                border: 1px solid var(--border-color);
+                font-weight: 600;
+                cursor: pointer;
+            }
             
             .dash-container, #view-budget { padding: 20px; }
             .hero-banner { padding: 40px 20px; }
@@ -449,9 +468,14 @@
         }
         .sync-btn:hover { background: var(--primary-accent); color: white; border-color: var(--primary-accent); }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        
+        .mobile-sync-btn { display: none; } /* Hidden on desktop */
     </style>
 </head>
 <body>
+    <div class="mobile-sync-btn" onclick="openFirebaseSettings()">
+        🔥 <span id="mobile-sync-label">Offline</span>
+    </div>
 
     <!-- Desktop Sidebar  -->
     <nav id="sidebar">
@@ -2104,13 +2128,16 @@ function toggleAttractionMarkers(show) {
         function updateSyncUI() {
           const dot = document.getElementById('sync-dot');
           const label = document.getElementById('sync-label');
+          const mobLabel = document.getElementById('mobile-sync-label');
           if (!dot || !label) return;
           if (firebaseConfig && firebaseConfig.databaseURL) {
             dot.className = 'sync-dot connected';
             label.textContent = 'Live (Verbunden)';
+            if(mobLabel) mobLabel.textContent = 'Live';
           } else {
             dot.className = 'sync-dot';
             label.textContent = 'Offline';
+            if(mobLabel) mobLabel.textContent = 'Offline';
           }
         }
 
