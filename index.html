@@ -383,7 +383,7 @@
             .mobile-sync-btn {
                 display: flex !important;
                 position: fixed;
-                top: 15px;
+                top: 65px;
                 right: 15px;
                 z-index: 1000;
                 background: var(--surface-color);
@@ -1021,7 +1021,8 @@
         }
 
         function saveState() {
-            appState._lastModified = Date.now();
+            appState._version = (appState._version || 0) + 1;
+            appState._lastModified = Date.now(); // keep for debugging
             localStorage.setItem('japanquest_v4', JSON.stringify(appState));
             if(typeof debouncedFirebasePush === 'function') debouncedFirebasePush();
         }
@@ -2092,13 +2093,13 @@ function toggleAttractionMarkers(show) {
             stateRef.on('value', (snapshot) => {
               const data = snapshot.val();
               if (data) {
-                // Timestamp-based conflict resolution:
-                // Only apply Firebase data if it is strictly newer than local data.
-                const localTime = (appState && appState._lastModified) || 0;
-                const remoteTime = data._lastModified || 0;
+                // Version-based conflict resolution (ignores clock skew):
+                // Only apply Firebase data if it has a strictly higher version.
+                const localVersion = (appState && appState._version) || 0;
+                const remoteVersion = data._version || 0;
 
-                if (remoteTime > localTime) {
-                  // Firebase is newer - apply it
+                if (remoteVersion > localVersion || (remoteVersion === 0 && localVersion === 0)) {
+                  // Firebase is newer (or both are fresh) - apply it
                   isSyncingFromFirebase = true;
                   appState = data;
 
@@ -2109,7 +2110,6 @@ function toggleAttractionMarkers(show) {
                   if (!appState.tickets) appState.tickets = {};
 
                   // Write to localStorage without triggering another push
-                  appState._lastModified = remoteTime;
                   localStorage.setItem('japanquest_v4', JSON.stringify(appState));
 
                   // Render UI
