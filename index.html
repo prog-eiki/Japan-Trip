@@ -1021,6 +1021,7 @@
         }
 
         function saveState() {
+            appState._lastModified = Date.now();
             localStorage.setItem('japanquest_v4', JSON.stringify(appState));
             if(typeof debouncedFirebasePush === 'function') debouncedFirebasePush();
         }
@@ -2091,31 +2092,45 @@ function toggleAttractionMarkers(show) {
             stateRef.on('value', (snapshot) => {
               const data = snapshot.val();
               if (data) {
-                isSyncingFromFirebase = true;
-                appState = data;
-                
-                // Ensure structure exists
-                DAY_CONFIG.forEach(d => {
-                  if (!appState.days[d.date]) appState.days[d.date] = { activities: [] };
-                });
-                if (!appState.tickets) appState.tickets = {};
-                
-                saveState(); // Save locally
-                
-                // Render UI
-                renderDashboard();
-                renderReiseplanSidebar();
-                renderReiseplanRight();
-                renderBudget();
-                if(window.renderTickets) window.renderTickets();
-                applyTheme();
-                
-                setSyncStatus('connected', 'Live (Verbunden)');
-                
-                setTimeout(() => { isSyncingFromFirebase = false; }, 500);
+                // Timestamp-based conflict resolution:
+                // Only apply Firebase data if it is strictly newer than local data.
+                const localTime = (appState && appState._lastModified) || 0;
+                const remoteTime = data._lastModified || 0;
+
+                if (remoteTime > localTime) {
+                  // Firebase is newer - apply it
+                  isSyncingFromFirebase = true;
+                  appState = data;
+
+                  // Ensure structure exists
+                  DAY_CONFIG.forEach(d => {
+                    if (!appState.days[d.date]) appState.days[d.date] = { activities: [] };
+                  });
+                  if (!appState.tickets) appState.tickets = {};
+
+                  // Write to localStorage without triggering another push
+                  appState._lastModified = remoteTime;
+                  localStorage.setItem('japanquest_v4', JSON.stringify(appState));
+
+                  // Render UI
+                  renderDashboard();
+                  renderReiseplanSidebar();
+                  renderReiseplanRight();
+                  renderBudget();
+                  if(window.renderTickets) window.renderTickets();
+                  applyTheme();
+
+                  setSyncStatus('connected', 'Live (Verbunden)');
+                  setTimeout(() => { isSyncingFromFirebase = false; }, 500);
+                } else {
+                  // Local is same age or newer - push local to Firebase
+                  setSyncStatus('connected', 'Live (Verbunden)');
+                  debouncedFirebasePush(true);
+                }
               } else {
+                // Firebase is empty - push local data up
                 setSyncStatus('connected', 'Live (Neu)');
-                debouncedFirebasePush(true); // First time setup
+                debouncedFirebasePush(true);
               }
             });
             
