@@ -352,7 +352,7 @@
         /* Modals */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 2000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal { background: var(--surface-color); width: 90%; max-width: 500px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; transform: translateY(20px); transition: transform 0.3s; border: 1px solid var(--border-color); }
+        .modal { background: var(--surface-color); width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); transform: translateY(20px); transition: transform 0.3s; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
         .modal-overlay.active .modal { transform: translateY(0); }
         .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
         .modal-title { font-size: 18px; font-weight: 600; font-family: var(--font-serif); }
@@ -379,6 +379,7 @@
             #bottom-nav { display: flex; }
             #main-content { padding-bottom: 0; }
             .view { padding-bottom: calc(var(--bottom-nav-height) + 30px); }
+            #view-dashboard { padding-bottom: calc(var(--bottom-nav-height) + 30px) !important; }
             
             .mobile-sync-btn {
                 display: flex;
